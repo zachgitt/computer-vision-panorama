@@ -38,13 +38,8 @@ def computeHomography(f1, f2, matches, A_out=None):
         (a_x, a_y) = f1[m.queryIdx].pt
         (b_x, b_y) = f2[m.trainIdx].pt
 
-        #BEGIN TODO 2
-        #Fill in the matrix A in this loop.
-        #Access elements using square brackets. e.g. A[0,0]
-        #TODO-BLOCK-BEGIN
-        raise Exception("TODO in alignment.py not implemented")
-        #TODO-BLOCK-END
-        #END TODO
+        A[i*2, :] = [float(a_x), float(a_y), 1., 0., 0., 0.,float(-b_x*a_x), float(-b_x*a_y), float(-b_x)]
+        A[i*2+1, :] = [0., 0., 0., float(a_x), float(a_y), 1., float(-b_y*a_x), float(-b_y*a_y), float(-b_y)]
 
     U, s, Vt = np.linalg.svd(A)
 
@@ -56,16 +51,9 @@ def computeHomography(f1, f2, matches, A_out=None):
     #Rows of Vt are the eigenvectors of A^TA.
     #Columns of U are the eigenvectors of AA^T.
 
+    # import pdb; pdb.set_trace()
     #Homography to be calculated
-    H = np.eye(3)
-
-    #BEGIN TODO 3
-    #Fill the homography H with the appropriate elements of the SVD
-    #TODO-BLOCK-BEGIN
-    raise Exception("TODO in alignment.py not implemented")
-    #TODO-BLOCK-END
-    #END TODO
-
+    H = Vt[np.argwhere(s>0)[-1]+1].reshape(3,3)
     return H
 
 def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
