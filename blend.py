@@ -27,10 +27,19 @@ def imageBoundingBox(img, M):
          minX: int for the maximum X value of a corner
          minY: int for the maximum Y value of a corner
     """
-    #TODO 8
-    #TODO-BLOCK-BEGIN
-    raise Exception("TODO in blend.py not implemented")
-    #TODO-BLOCK-END
+    height, width, _ = img.shape
+    pts_in = np.array([
+        [0, 0, 1],
+        [0, width-1, 1],
+        [height-1, 0, 1],
+        [height-1, width-1, 1]
+    ])
+
+    # Calculate transforms
+    pts_out = np.dot(M, pts_in.T)
+    minX, maxX = np.min(pts_out[0]), np.max(pts_out[0])
+    minY, maxY = np.min(pts_out[1]), np.max(pts_out[1])
+
     return int(minX), int(minY), int(maxX), int(maxY)
 
 
