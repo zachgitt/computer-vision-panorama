@@ -53,7 +53,7 @@ def computeHomography(f1, f2, matches, A_out=None):
 
     # import pdb; pdb.set_trace()
     #Homography to be calculated
-    H = Vt[np.argwhere(s>0)[-1]+1].reshape(3,3)
+    H = Vt[-1].reshape(3, 3)
     return H
 
 def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
@@ -79,22 +79,36 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
         compute the least squares motion estimate using the inliers,
         and return as a transformation matrix M.
     '''
+    # N trials
+    max_inliers = []
+    for n in range(nRANSAC):
 
-    #BEGIN TODO 4
-    #Write this entire method.  You need to handle two types of
-    #motion models, pure translations (m == eTranslation) and
-    #full homographies (m == eHomography).  However, you should
-    #only have one outer loop to perform the RANSAC code, as
-    #the use of RANSAC is almost identical for both cases.
+        # Current motion model
+        inliers = []
 
-    #Your homography handling code should call compute_homography.
-    #This function should also call get_inliers and, at the end,
-    #least_squares_fit.
-    #TODO-BLOCK-BEGIN
-    raise Exception("TODO in alignment.py not implemented")
-    #TODO-BLOCK-END
-    #END TODO
-    return M
+        # Translation
+        if m == eTranslate:
+            match = np.random.choice(matches, size=1)
+            f1_pt = f1[match.queryIdx].pt
+            f2_pt = f2[match.trainIdx].pt
+            tx = f2_pt[0] - f1_pt[0]
+            ty = f2_pt[1] - f1_pt[1]
+            M = np.ndarray([[1, 0, tx], [0, 1, ty], [0, 0, 1]])
+            inliers = getInliers(f1, f2, matches, M, RANSACthresh)
+
+        # Homography
+        elif m == eHomography:
+            h_matches = np.random.choice(matches, size=4, replace=False)
+            f1_pts = [f1[m.queryIdx] for m in h_matches]
+            f2_pts = [f2[m.trainIdx] for m in h_matches]
+            M = computeHomography(f1_pts, f2_pts, matches)
+            inliers = getInliers(f1, f2, matches, M, RANSACthresh)
+
+        # Best motion model
+        if len(inliers) > len(max_inliers):
+            max_inliers = inliers
+
+    return leastSquaresFit(f1, f2, matches, m, max_inliers)
 
 def getInliers(f1, f2, matches, M, RANSACthresh):
     '''
@@ -121,14 +135,18 @@ def getInliers(f1, f2, matches, M, RANSACthresh):
     inlier_indices = []
 
     for i in range(len(matches)):
-        #BEGIN TODO 5
-        #Determine if the ith matched feature f1[id1], when transformed
-        #by M, is within RANSACthresh of its match in f2.
-        #If so, append i to inliers
-        #TODO-BLOCK-BEGIN
-        raise Exception("TODO in alignment.py not implemented")
-        #TODO-BLOCK-END
-        #END TODO
+        # Get tuple points
+        pt1 = f1[matches[i].queryIdx].pt
+        pt2 = f2[matches[i].trainIdx].pt
+
+        # Convert to lists
+        pt1 = np.array([pt1[0], pt1[1], 1])
+        pt2 = np.array([pt2[0], pt2[1], 1])
+
+        # Predict
+        pt2_pred = np.dot(M, pt1)
+        if np.linalg.norm(pt2_pred - pt2) < RANSACthresh:
+            inlier_indices.append(i)
 
     return inlier_indices
 
@@ -167,13 +185,10 @@ def leastSquaresFit(f1, f2, matches, m, inlier_indices):
         v = 0.0
 
         for i in range(len(inlier_indices)):
-            #BEGIN TODO 6
-            #Use this loop to compute the average translation vector
-            #over all inliers.
-            #TODO-BLOCK-BEGIN
-            raise Exception("TODO in alignment.py not implemented")
-            #TODO-BLOCK-END
-            #END TODO
+            pt1 = f1[matches[i].queryIdx].pt
+            pt2 = f2[matches[i].trainIdx].pt
+            u += pt2[0] - pt1[0]
+            v += pt2[1] - pt1[1]
 
         u /= len(inlier_indices)
         v /= len(inlier_indices)
@@ -182,13 +197,7 @@ def leastSquaresFit(f1, f2, matches, m, inlier_indices):
         M[1,2] = v
 
     elif m == eHomography:
-        #BEGIN TODO 7
-        #Compute a homography M using all inliers.
-        #This should call computeHomography.
-        #TODO-BLOCK-BEGIN
-        raise Exception("TODO in alignment.py not implemented")
-        #TODO-BLOCK-END
-        #END TODO
+        M = computeHomography(f1, f2, [matches[i] for i in inlier_indices])
 
     else:
         raise Exception("Error: Invalid motion model.")
