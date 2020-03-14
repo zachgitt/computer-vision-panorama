@@ -57,11 +57,22 @@ def accumulateBlend(img, acc, M, blendWidth):
     """
     # BEGIN TODO 10
     # Fill in this routine
-    #TODO-BLOCK-BEGIN
-    raise Exception("TODO in blend.py not implemented")
-    #TODO-BLOCK-END
-    # END TODO
+    inverted = np.invert(M)
+    for y in acc.shape[0]:
+        for x in acc.shape[1]:
+            output = np.ndarray(inverted @ np.ndarray([x, y, 1]).T)
+            output[0] /= output[2]
+            output[1] /= output[2]
+            output[2] /= output[2]
+            if is_inbounds(round(output[0]), round(output[1]), img):
+                acc[y][x] = img[round(output[1])][round(output[0])]
+    return acc
 
+
+
+
+def is_inbounds(x, y, img):
+    return y < img.shape[0] and x < img.shape[1]
 
 def normalizeBlend(acc):
     """
@@ -113,12 +124,20 @@ def getAccSize(ipv):
             channels = c
             width = w
 
-        # BEGIN TODO 9
-        # add some code here to update minX, ..., maxY
-        #TODO-BLOCK-BEGIN
-        raise Exception("TODO in blend.py not implemented")
-        #TODO-BLOCK-END
-        # END TODO
+        height, width, _ = img.shape
+        pts_in = np.array([
+            [0, 0, 1],
+            [0, width - 1, 1],
+            [height - 1, 0, 1],
+            [height - 1, width - 1, 1]
+        ])
+
+        # Calculate transforms
+        pts_out = np.dot(M, pts_in.T)
+        minX = np.min(np.append(pts_out[0], minX))
+        maxX = np.max(np.append(pts_out[0], maxX))
+        minY = np.min(np.append(pts_out[1], minY))
+        maxY = np.max(np.append(pts_out[1], maxY))
 
     # Create an accumulator image
     accWidth = int(math.ceil(maxX) - math.floor(minX))
