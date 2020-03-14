@@ -3,6 +3,7 @@ import random
 
 import cv2
 import numpy as np
+import pdb
 
 eTranslate = 0
 eHomography = 1
@@ -51,9 +52,8 @@ def computeHomography(f1, f2, matches, A_out=None):
     #Rows of Vt are the eigenvectors of A^TA.
     #Columns of U are the eigenvectors of AA^T.
 
-    # import pdb; pdb.set_trace()
     #Homography to be calculated
-    H = Vt[-1].reshape(3, 3)
+    H = (Vt[-1]/Vt[-1][8]).reshape(3, 3)
     return H
 
 def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
@@ -83,25 +83,25 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
     max_inliers = []
     for n in range(nRANSAC):
 
+
         # Current motion model
         inliers = []
 
         # Translation
         if m == eTranslate:
-            match = np.random.choice(matches, size=1)
+            match = matches[random.randint(0, len(matches)-1)]
             f1_pt = f1[match.queryIdx].pt
             f2_pt = f2[match.trainIdx].pt
             tx = f2_pt[0] - f1_pt[0]
             ty = f2_pt[1] - f1_pt[1]
-            M = np.ndarray([[1, 0, tx], [0, 1, ty], [0, 0, 1]])
+            M = np.array([[1, 0, tx], [0, 1, ty], [0, 0, 1]])
             inliers = getInliers(f1, f2, matches, M, RANSACthresh)
 
         # Homography
         elif m == eHomography:
             h_matches = np.random.choice(matches, size=4, replace=False)
-            f1_pts = [f1[m.queryIdx] for m in h_matches]
-            f2_pts = [f2[m.trainIdx] for m in h_matches]
-            M = computeHomography(f1_pts, f2_pts, matches)
+            print(h_matches)
+            M = computeHomography(f1, f2, h_matches)
             inliers = getInliers(f1, f2, matches, M, RANSACthresh)
 
         # Best motion model
@@ -147,7 +147,6 @@ def getInliers(f1, f2, matches, M, RANSACthresh):
         pt2_pred = np.dot(M, pt1)
         if np.linalg.norm(pt2_pred - pt2) < RANSACthresh:
             inlier_indices.append(i)
-
     return inlier_indices
 
 def leastSquaresFit(f1, f2, matches, m, inlier_indices):
@@ -201,6 +200,5 @@ def leastSquaresFit(f1, f2, matches, m, inlier_indices):
 
     else:
         raise Exception("Error: Invalid motion model.")
-
     return M
 
