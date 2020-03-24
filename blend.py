@@ -57,6 +57,15 @@ def accumulateBlend(img, acc, M, blendWidth):
     """
     # BEGIN TODO 10
     # Fill in this routine
+
+    # Get warped image
+    minX, minY, maxX, maxY = imageBoundingBox(img, M)
+    out = cv2.warpPerspective(img, M, acc.shape, flags='INTER_LINEAR')
+    for y in range(minY, maxY):
+        for x in range(minX, maxX):
+            pass
+
+
     inverted = np.invert(M)
     for y in acc.shape[0]:
         for x in acc.shape[1]:
