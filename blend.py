@@ -36,11 +36,19 @@ def imageBoundingBox(img, M):
     ])
 
     # Calculate transforms
-    pts_out = np.dot(M, pts_in.T)
-    minX = pts_out[0][np.argmin(pts_out[0]/pts_out[2])]
-    maxX = pts_out[0][np.argmax(pts_out[0]/pts_out[2])]
-    minY = pts_out[1][np.argmin(pts_out[1]/pts_out[2])]
-    maxY = pts_out[1][np.argmax(pts_out[1]/pts_out[2])]
+    pts_out = []
+    for i in range(height):
+        for j in range(width):
+            out = np.dot(M, img[i][j])
+            out /= out[-1] # divide by z
+            pts_out.append([out[0], out[1]])
+    pts_out = np.array(pts_out)
+
+    # Calculate transforms
+    minX = np.argmin(pts_out[0])
+    maxX = np.argmax(pts_out[0])
+    minY = np.argmin(pts_out[1])
+    maxY = np.argmax(pts_out[1])
     return int(minX), int(minY), int(maxX), int(maxY)
 
 
@@ -98,12 +106,12 @@ def normalizeBlend(acc):
     #             img[row, column] = (acc[row, column, 0:3] / acc[row, column, 3]).astype(int)
     # return img
     height, width, depth = acc.shape
-    img = np.copy(acc, shape=(height, width, depth-1))
+    img = np.zeros(shape=(height, width, depth-1), dtype=np.uint8)
     for i in range(height):
         for j in range(width):
             for k in range(depth-1):
                 if img[i][j][k]:
-                    img[i][j][k] = int(img[i][j][k] / acc[i][j][3])
+                    img[i][j][k] = int(acc[i][j][k] / acc[i][j][3])
     return img
 
 
