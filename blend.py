@@ -97,6 +97,14 @@ def normalizeBlend(acc):
     #         if acc[row, column, 3] > 0:
     #             img[row, column] = (acc[row, column, 0:3] / acc[row, column, 3]).astype(int)
     # return img
+    height, width, depth = acc.shape
+    img = np.copy(acc, shape=(height, width, depth-1))
+    for i in range(height):
+        for j in range(width):
+            for k in range(depth-1):
+                if img[i][j][k]:
+                    img[i][j][k] = int(img[i][j][k] / acc[i][j][3])
+    return img
 
 
 def getAccSize(ipv):
