@@ -55,26 +55,18 @@ def accumulateBlend(img, acc, M, blendWidth):
          three channels of acc record the weighted sum of the pixel colors
          and the fourth channel of acc records a sum of the weights
     """
-    # BEGIN TODO 10
-    # Fill in this routine
-
     # Get warped image
     minX, minY, maxX, maxY = imageBoundingBox(img, M)
-    out = cv2.warpPerspective(img, M, acc.shape, flags='INTER_LINEAR')
+    warped = cv2.warpPerspective(img, M, acc.shape, flags='INTER_LINEAR')
     for y in range(minY, maxY):
         for x in range(minX, maxX):
-            pass
-
-
-    inverted = np.invert(M)
-    for y in acc.shape[0]:
-        for x in acc.shape[1]:
-            output = np.ndarray(inverted @ np.ndarray([x, y, 1]).T)
-            output[0] /= output[2]
-            output[1] /= output[2]
-            output[2] /= output[2]
-            if is_inbounds(round(output[0]), round(output[1]), img):
-                acc[y][x] = img[round(output[1])][round(output[0])]
+            if x < blendWidth + minX:
+                acc[y][x][3] += (x-minX)/blendWidth
+            if x > maxX-blendWidth:
+                acc[y][x][3] += (maxX-x)/blendWidth
+            for color in range(3):
+                if acc[y][x][color]!=0:
+                    acc[y][x][color] += acc[y][x][3] * warped[y][x][color]
     return acc
 
 
