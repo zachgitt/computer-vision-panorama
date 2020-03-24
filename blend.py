@@ -37,9 +37,10 @@ def imageBoundingBox(img, M):
 
     # Calculate transforms
     pts_out = np.dot(M, pts_in.T)
-    minX, maxX = np.min(pts_out[0]), np.max(pts_out[0])
-    minY, maxY = np.min(pts_out[1]), np.max(pts_out[1])
-
+    minX = pts_out[0][np.argmin(pts_out[0]/pts_out[2])]
+    maxX = pts_out[0][np.argmax(pts_out[0]/pts_out[2])]
+    minY = pts_out[1][np.argmin(pts_out[1]/pts_out[2])]
+    maxY = pts_out[1][np.argmax(pts_out[1]/pts_out[2])]
     return int(minX), int(minY), int(maxX), int(maxY)
 
 
@@ -57,16 +58,23 @@ def accumulateBlend(img, acc, M, blendWidth):
     """
     # Get warped image
     minX, minY, maxX, maxY = imageBoundingBox(img, M)
-    warped = cv2.warpPerspective(img, M, (acc.shape[0], acc.shape[1]), flags=cv2.cv2.INTER_LINEAR)
+    warped = cv2.warpPerspective(img, M, (acc.shape[1], acc.shape[0]), flags=1)
     for y in range(minY, maxY):
         for x in range(minX, maxX):
-            if x < blendWidth + minX:
-                acc[y][x][3] += (x-minX)/blendWidth
-            if x > maxX-blendWidth:
-                acc[y][x][3] += (maxX-x)/blendWidth
-            for color in range(3):
-                if acc[y][x][color]!=0:
-                    acc[y][x][color] += acc[y][x][3] * warped[y][x][color]
+            if x - minX < blendWidth:
+                weight = (x-minX)/blendWidth
+                for color in range(3):
+                    acc[y][x][color] += weight * warped[y][x][color]
+                acc[y][x][3] += weight
+            elif maxX - x < blendWidth:
+                weight += (maxX-x)/blendWidth
+                for color in range(3):
+                    acc[y][x][color] += weight * warped[y][x][color]
+                acc[y][x][3] += weight
+            else:
+                for color in range(3):
+                    acc[y][x][color] += warped[y][x][color]
+                acc[y][x][3] += 1
     return acc
 
 
@@ -83,13 +91,12 @@ def normalizeBlend(acc):
        OUTPUT:
          img: image with r,g,b values of acc normalized
     """
-    height, width, depth = acc.shape
-    img = np.copy(acc)[:, :, -1]
-    for i in range(height):
-        for j in range(width):
-            for k in range(depth-1):
-                img[i][j][k] /= acc[i][j][3]
-    return img
+    # img = np.zeros((acc.shape[0], acc.shape[1], 3), dtype=np.uint8)
+    # for row in range(acc.shape[0]):
+    #     for column in range(acc.shape[1]):
+    #         if acc[row, column, 3] > 0:
+    #             img[row, column] = (acc[row, column, 0:3] / acc[row, column, 3]).astype(int)
+    # return img
 
 
 def getAccSize(ipv):
@@ -227,10 +234,10 @@ def blendImages(ipv, blendWidth, is360=False, A_out=None):
     # Then handle the vertical drift
     # Note: warpPerspective does forward mapping which means A is an affine
     # transform that maps accumulator coordinates to final panorama coordinates
-    #TODO-BLOCK-BEGIN
-    raise Exception("TODO in blend.py not implemented")
-    #TODO-BLOCK-END
-    # END TODO
+
+    if(is360):
+        A = computeDrift(x_init, y_init, x_final, y_final, width)
+
 
     if A_out is not None:
         A_out[:] = A
