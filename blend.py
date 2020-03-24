@@ -42,13 +42,13 @@ def imageBoundingBox(img, M):
             out = np.dot(M, img[i][j])
             out /= out[-1] # divide by z
             pts_out.append([out[0], out[1]])
-    pts_out = np.array(pts_out)
+    pts_out = np.array(pts_out).T
 
     # Calculate transforms
-    minX = np.argmin(pts_out[0])
-    maxX = np.argmax(pts_out[0])
-    minY = np.argmin(pts_out[1])
-    maxY = np.argmax(pts_out[1])
+    minX = np.min(pts_out[0])
+    maxX = np.max(pts_out[0])
+    minY = np.min(pts_out[1])
+    maxY = np.max(pts_out[1])
     return int(minX), int(minY), int(maxX), int(maxY)
 
 
