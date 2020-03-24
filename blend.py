@@ -84,11 +84,12 @@ def normalizeBlend(acc):
          img: image with r,g,b values of acc normalized
     """
     height, width, depth = acc.shape
-    img = np.copy(acc)[:, :, -1]
+    img = np.copy(shape=(height, width, depth-1))
     for i in range(height):
         for j in range(width):
             for k in range(depth-1):
-                img[i][j][k] /= acc[i][j][3]
+                if img[i][j][k]:
+                    img[i][j][k] = int(img[i][j][k] / acc[i][j][3])
     return img
 
 
