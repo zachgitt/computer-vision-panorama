@@ -67,7 +67,7 @@ def accumulateBlend(img, acc, M, blendWidth):
                     acc[y][x][color] += weight * warped[y][x][color]
                 acc[y][x][3] += weight
             elif maxX - x < blendWidth:
-                weight += (maxX-x)/blendWidth
+                weight = (maxX-x)/blendWidth
                 for color in range(3):
                     acc[y][x][color] += weight * warped[y][x][color]
                 acc[y][x][3] += weight
@@ -91,20 +91,13 @@ def normalizeBlend(acc):
        OUTPUT:
          img: image with r,g,b values of acc normalized
     """
-    # img = np.zeros((acc.shape[0], acc.shape[1], 3), dtype=np.uint8)
-    # for row in range(acc.shape[0]):
-    #     for column in range(acc.shape[1]):
-    #         if acc[row, column, 3] > 0:
-    #             img[row, column] = (acc[row, column, 0:3] / acc[row, column, 3]).astype(int)
-    # return img
     height, width, depth = acc.shape
-    img = np.copy(acc, shape=(height, width, depth-1))
+    final_img = np.zeros((height, width, depth-1)).astype('uint8')
     for i in range(height):
         for j in range(width):
-            for k in range(depth-1):
-                if img[i][j][k]:
-                    img[i][j][k] = int(img[i][j][k] / acc[i][j][3])
-    return img
+            if acc[i, j, 3] != 0:
+                final_img[i, j] = (acc[i, j, 0:3] / acc[i, j, 3]).astype('uint8')
+    return final_img
 
 
 def getAccSize(ipv):
