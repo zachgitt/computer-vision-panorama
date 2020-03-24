@@ -57,7 +57,7 @@ def accumulateBlend(img, acc, M, blendWidth):
     """
     # Get warped image
     minX, minY, maxX, maxY = imageBoundingBox(img, M)
-    warped = cv2.warpPerspective(img, M, (acc.shape[0], acc.shape[1]), flags='INTER_LINEAR')
+    warped = cv2.warpPerspective(img, M, (acc.shape[0], acc.shape[1]), flags=cv2.cv2.INTER_LINEAR)
     for y in range(minY, maxY):
         for x in range(minX, maxX):
             if x < blendWidth + minX:
@@ -89,7 +89,6 @@ def normalizeBlend(acc):
         for j in range(width):
             for k in range(depth-1):
                 img[i][j][k] /= acc[i][j][3]
-
     return img
 
 
