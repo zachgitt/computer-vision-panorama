@@ -91,12 +91,13 @@ def normalizeBlend(acc):
        OUTPUT:
          img: image with r,g,b values of acc normalized
     """
-    # BEGIN TODO 11
-    # fill in this routine..
-    #TODO-BLOCK-BEGIN
-    raise Exception("TODO in blend.py not implemented")
-    #TODO-BLOCK-END
-    # END TODO
+    height, width, depth = acc.shape
+    img = np.copy(acc)[:, :, -1]
+    for i in range(height):
+        for j in range(width):
+            for k in range(depth-1):
+                img[i][j][k] /= acc[i][j][3]
+
     return img
 
 
