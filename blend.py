@@ -28,12 +28,12 @@ def imageBoundingBox(img, M):
          minY: int for the maximum Y value of a corner
     """
     height, width, _ = img.shape
-    pts_in = np.array([
-        [0, 0, 1],
-        [0, width-1, 1],
-        [height-1, 0, 1],
-        [height-1, width-1, 1]
-    ])
+    #pts_in = np.array([
+    #    [0, 0, 1],
+    #    [0, width-1, 1],
+    #    [height-1, 0, 1],
+    #    [height-1, width-1, 1]
+    #])
 
     # Calculate transforms
     pts_out = []
@@ -49,6 +49,11 @@ def imageBoundingBox(img, M):
     maxX = np.max(pts_out[0])
     minY = np.min(pts_out[1])
     maxY = np.max(pts_out[1])
+    print('minX = ' + str(int(minX)))
+    print('maxX = ' + str(int(maxX)))
+    print('minY = ' + str(int(minY)))
+    print('maxY = ' + str(int(maxY)))
+    import pdb; pdb.set_trace()
     return int(minX), int(minY), int(maxX), int(maxY)
 
 
