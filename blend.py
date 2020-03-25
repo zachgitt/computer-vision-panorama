@@ -59,12 +59,13 @@ def accumulateBlend(img, acc, M, blendWidth):
     """
     # Get warped image
     minX, minY, maxX, maxY = imageBoundingBox(img, M)
-    print(minX, minY, maxX, maxY)
     warped = cv2.warpPerspective(img, M, (acc.shape[1], acc.shape[0]), flags=1)
     for y in range(minY, maxY):
         for x in range(minX, maxX):
             #Check if y and x are in bounds, if not continue
             if not is_inbounds(x, y, acc):
+                continue
+            if warped[y][x][0] == 0 and warped[y][x][1] == 0 and warped[y][x][2] == 0:
                 continue
             if x - minX < blendWidth:
                 weight = (x-minX)/blendWidth
@@ -156,7 +157,6 @@ def getAccSize(ipv):
     # Create an accumulator image
     accWidth = int(math.ceil(maxX) - math.floor(minX))
     accHeight = int(math.ceil(maxY) - math.floor(minY))
-    print('accWidth, accHeight:', (accWidth, accHeight))
     translation = np.array([[1, 0, -minX], [0, 1, -minY], [0, 0, 1]])
 
     return accWidth, accHeight, channels, width, translation

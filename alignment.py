@@ -100,7 +100,6 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
         # Homography
         elif m == eHomography:
             h_matches = np.random.choice(matches, size=4, replace=False)
-            print(h_matches)
             M = computeHomography(f1, f2, h_matches)
             inliers = getInliers(f1, f2, matches, M, RANSACthresh)
 
