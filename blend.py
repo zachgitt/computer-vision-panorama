@@ -34,23 +34,14 @@ def imageBoundingBox(img, M):
         [height-1, 0, 1],
         [height-1, width-1, 1]
     ])
-
     # Calculate transforms
-    pts_out = []
-    for i in range(height):
-        for j in range(width):
-            out = np.dot(M, img[i][j])
-            out /= out[-1] # divide by z
-            pts_out.append([out[0], out[1]])
-    pts_out = np.array(pts_out)
-    print(pts_out.shape)
-
-    # Calculate transforms
-    minX = pts_out[0][np.argmin(pts_out[0])]
-    maxX = pts_out[0][np.argmax(pts_out[0])]
-    minY = pts_out[1][np.argmin(pts_out[1])]
-    maxY = pts_out[1][np.argmax(pts_out[1])]
-    print(int(minX), int(minY), int(maxX), int(maxY))
+    pts_out = np.dot(M, pts_in.T)
+    pts_out[0] = (pts_out[0]/pts_out[2])
+    pts_out[1] = (pts_out[1]/pts_out[2])
+    minX = np.min(pts_out[0])
+    maxX = np.max(pts_out[0])
+    minY = np.min(pts_out[1])
+    maxY = np.max(pts_out[1])
     return int(minX), int(minY), int(maxX), int(maxY)
 
 
@@ -68,9 +59,13 @@ def accumulateBlend(img, acc, M, blendWidth):
     """
     # Get warped image
     minX, minY, maxX, maxY = imageBoundingBox(img, M)
+    print(minX, minY, maxX, maxY)
     warped = cv2.warpPerspective(img, M, (acc.shape[1], acc.shape[0]), flags=1)
     for y in range(minY, maxY):
         for x in range(minX, maxX):
+            #Check if y and x are in bounds, if not continue
+            if not is_inbounds(x, y, acc):
+                continue
             if x - minX < blendWidth:
                 weight = (x-minX)/blendWidth
                 for color in range(3):
@@ -91,7 +86,7 @@ def accumulateBlend(img, acc, M, blendWidth):
 
 
 def is_inbounds(x, y, img):
-    return y < img.shape[0] and x < img.shape[1]
+    return y < img.shape[0] and x < img.shape[1] and x>=0 and y>=0
 
 def normalizeBlend(acc):
     """
@@ -237,7 +232,7 @@ def blendImages(ipv, blendWidth, is360=False, A_out=None):
     x_init, y_init, x_final, y_final = getDriftParams(ipv, translation, width)
     # Compute the affine transform
     A = np.identity(3)
-    # BEGIN TODO 12
+    # BEGIN 12
     # fill in appropriate entries in A to trim the left edge and
     # to take out the vertical drift if this is a 360 panorama
     # (i.e. is360 is true)
