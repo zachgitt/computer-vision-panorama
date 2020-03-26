@@ -101,8 +101,11 @@ def normalizeBlend(acc):
     final_img = np.zeros((height, width, depth-1)).astype('uint8')
     for i in range(height):
         for j in range(width):
-            if acc[i, j, 3] != 0:
-                final_img[i, j] = (acc[i, j, 0:3] / acc[i, j, 3]).astype('uint8')
+            for k in range(3):
+                if acc[i, j, 3] != 0 and (acc[i, j, k]/acc[i, j, 3]) > 255:
+                    acc[i, j, k] = 255
+                elif acc[i, j, 3] != 0:
+                    final_img[i, j, k] = acc[i, j, k] / acc[i, j, 3]
     return final_img
 
 

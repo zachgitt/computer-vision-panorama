@@ -82,11 +82,8 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
     # N trials
     max_inliers = []
     for n in range(nRANSAC):
-
-
         # Current motion model
         inliers = []
-
         # Translation
         if m == eTranslate:
             match = matches[random.randint(0, len(matches)-1)]
@@ -96,18 +93,16 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
             ty = f2_pt[1] - f1_pt[1]
             M = np.array([[1, 0, tx], [0, 1, ty], [0, 0, 1]])
             inliers = getInliers(f1, f2, matches, M, RANSACthresh)
-
         # Homography
         elif m == eHomography:
             h_matches = np.random.choice(matches, size=4, replace=False)
             M = computeHomography(f1, f2, h_matches)
             inliers = getInliers(f1, f2, matches, M, RANSACthresh)
-
         # Best motion model
         if len(inliers) > len(max_inliers):
             max_inliers = inliers
-
     return leastSquaresFit(f1, f2, matches, m, max_inliers)
+
 
 def getInliers(f1, f2, matches, M, RANSACthresh):
     '''
@@ -141,12 +136,15 @@ def getInliers(f1, f2, matches, M, RANSACthresh):
         # Convert to lists
         pt1 = np.array([pt1[0], pt1[1], 1])
         pt2 = np.array([pt2[0], pt2[1], 1])
-
         # Predict
         pt2_pred = np.dot(M, pt1)
+        pt2_pred[0] = pt2_pred[0]/pt2_pred[2]
+        pt2_pred[1] = pt2_pred[1]/pt2_pred[2]
         if np.linalg.norm(pt2_pred - pt2) < RANSACthresh:
             inlier_indices.append(i)
     return inlier_indices
+
+
 
 def leastSquaresFit(f1, f2, matches, m, inlier_indices):
     '''
@@ -183,8 +181,8 @@ def leastSquaresFit(f1, f2, matches, m, inlier_indices):
         v = 0.0
 
         for i in range(len(inlier_indices)):
-            pt1 = f1[matches[i].queryIdx].pt
-            pt2 = f2[matches[i].trainIdx].pt
+            pt1 = f1[matches[inlier_indices[i]].queryIdx].pt
+            pt2 = f2[matches[inlier_indices[i]].trainIdx].pt
             u += pt2[0] - pt1[0]
             v += pt2[1] - pt1[1]
 
@@ -200,4 +198,6 @@ def leastSquaresFit(f1, f2, matches, m, inlier_indices):
     else:
         raise Exception("Error: Invalid motion model.")
     return M
+
+
 
